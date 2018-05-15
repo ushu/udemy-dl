@@ -20,6 +20,8 @@ var argv = yargs
     .command( "course_url", "URL of the udemy coures to download", { alias: "url" } )
     .option( "u", { alias: "username", demand: false, describe: "Username in udemy", type: "string" } )
     .option( "p", { alias: "password", demand: false, describe: "Password of yor account", type: "string" } )
+    .option( "c", { alias: "client_id", demand: false, describe: "Client ID from Udemy cookies", type: "string" } )
+    .option( "a", { alias: "access_token", demand: false, describe: "Access Token from Udemy cookies", type: "string" } )
     .option( "r", { alias: "resolution", demand: false, describe: "Download video resolution, default resolution is 360, for other video resolutions please refer to the website.", type: "number" } )
     .option( "o", { alias: "output", demand: false, describe: "Output directory where the videos will be saved, default is current directory", type: "string" } )
     .help( "?" )
@@ -32,7 +34,11 @@ var argv = yargs
 
     functions.headingMsg();
     var status;
-    if(argv.username && argv.password)
+    if(argv.access_token && argv.client_id) {
+      core.set_credentials(argv.access_token, argv.client_id) ;
+      _proceed();
+    }
+    else if(argv.username && argv.password)
     {
                   status = new Spinner('Logging in, please wait...          ');
                   status.start();
@@ -41,30 +47,7 @@ var argv = yargs
 
                 status.stop();
 
-
-                if(url)
-                {
-
-                        status = new Spinner("Checking course url...                   ");
-                        status.start();
-
-                        core.get_course_id(url,function(id){
-                            let course_id = id;
-                            core.check_course_status(id,function(){
-                              status.stop();
-                              core.get_data_links(course_id);
-                            });
-                        });
-
-                }
-                else
-                {
-
-                  functions.getCourse(url,function(){
-                      //console.log("Ok");
-                  });
-
-                }
+                _proceed();
 
           });
     }
@@ -83,4 +66,30 @@ var argv = yargs
                   });
                 });
         });
+    }
+
+    function _proceed() {
+      if(url)
+      {
+
+        status = new Spinner("Checking course url...                   ");
+        status.start();
+
+        core.get_course_id(url,function(id){
+          let course_id = id;
+          core.check_course_status(id,function(){
+            status.stop();
+            core.get_data_links(course_id);
+          });
+        });
+
+      }
+      else
+      {
+
+        functions.getCourse(url,function(){
+          //console.log("Ok");
+        });
+
+      }
     }
